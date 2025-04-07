@@ -3,7 +3,7 @@ use nokhwa::{
     utils::{CameraIndex, RequestedFormat, RequestedFormatType},
     Camera,
 };
-use pancurses::{endwin, initscr, noecho, Input};
+use pancurses::{endwin, initscr, noecho, Input, A_REVERSE};
 use std::time::Instant;
 use labeled_webcam_photos::LabeledPhotoGallery;
 
@@ -18,8 +18,7 @@ fn main() -> anyhow::Result<()> {
     let mut photos = LabeledPhotoGallery::with_labels(args[1..].iter().cloned());
     photos.create_directories(project)?;
     curses_loop(&mut photos)?;
-
-    
+    photos.save_images(project)?;
 
     Ok(())
 }
@@ -38,6 +37,8 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
     window.keypad(true);
     window.nodelay(true);
     noecho();
+    let mut taken = false;
+    let mut num_taken = 0;
 
     let start = Instant::now();
     let mut frames = 0;
@@ -45,10 +46,16 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
         frames += 1;
         let fps = frames as f64 / start.elapsed().as_secs_f64();
         let (wrows, wcols) = window.get_max_yx();
-        let header = format!("terminal rows: {wrows} cols: {wcols}\n{fps:.2} fps\n");
+        let header = format!("terminal rows: {wrows} cols: {wcols}\n{fps:.2} fps; {num_taken} pictures taken\n");
         let frame = camera.frame()?;
         let img = frame.decode_image::<LumaFormat>()?;
+        if taken {
+            window.attron(A_REVERSE);
+            taken = false;
+        }
         menu.show_in_terminal(&window, header.as_str(), &img);
+        window.attron(A_REVERSE);
+
         if let Some(k) = window.getch() {
             if k == Input::Character('q') {
                 break;
@@ -58,6 +65,8 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
                 menu.down();
             } else if k == Input::Character('p') {
                 photos.record_photo(menu.current_choice(), &img);
+                taken = true;
+                num_taken += 1;
             }
         }
     }
