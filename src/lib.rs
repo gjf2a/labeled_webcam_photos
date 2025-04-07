@@ -46,10 +46,11 @@ impl LabeledPhotoGallery {
         for (label, photos) in self.label2photos.iter() {
             let label_dir = project_dir.join(label);
             assert!(label_dir.is_dir());
-            let file_count = std::fs::read_dir(label_dir)?.count();
+            let file_count = std::fs::read_dir(label_dir.as_path())?.count();
             for (i, img) in photos.iter().enumerate() {
                 let filename = format!("photo_{}.png", file_count + i + 1);
-                img.save(filename)?;
+                let file_path = label_dir.join(filename);
+                img.save(file_path)?;
             }
         }
         Ok(())
@@ -98,7 +99,7 @@ impl Menu {
         self.choice = (self.choice + 1) % self.choices.len();
     }
 
-    pub fn show_in_terminal(&self, terminal: &Window, header: &str, img: &GrayImage) {
+    pub fn show_in_terminal(&self, terminal: &Window, header: &str, img: &GrayImage, taken: bool) {
         let header_size = header.lines().count();
         terminal.clear();
         for (row, line) in header.lines().enumerate() {
@@ -120,12 +121,16 @@ impl Menu {
             height - header_size as i32,
         );
         let resized = resize(img, scaled_width, scaled_height, FilterType::Nearest);
+        if taken {
+            terminal.attron(A_REVERSE);
+        }
         for (row, row_pixels) in resized.rows().enumerate() {
             for (col, pixel) in row_pixels.enumerate() {
                 let c = gray2char(pixel.0[0]);
                 terminal.mvaddch((row + header_size + self.choices.len()) as i32, col as i32, c);
             }
         }
+        terminal.attroff(A_REVERSE);
         terminal.refresh();
     }
 }

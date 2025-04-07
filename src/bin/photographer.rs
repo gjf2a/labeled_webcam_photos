@@ -3,7 +3,7 @@ use nokhwa::{
     utils::{CameraIndex, RequestedFormat, RequestedFormatType},
     Camera,
 };
-use pancurses::{endwin, initscr, noecho, Input, A_REVERSE};
+use pancurses::{endwin, initscr, noecho, Input};
 use std::time::Instant;
 use labeled_webcam_photos::LabeledPhotoGallery;
 
@@ -49,12 +49,10 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
         let header = format!("terminal rows: {wrows} cols: {wcols}\n{fps:.2} fps; {num_taken} pictures taken\n");
         let frame = camera.frame()?;
         let img = frame.decode_image::<LumaFormat>()?;
+        menu.show_in_terminal(&window, header.as_str(), &img, taken);
         if taken {
-            window.attron(A_REVERSE);
             taken = false;
         }
-        menu.show_in_terminal(&window, header.as_str(), &img);
-        window.attron(A_REVERSE);
 
         if let Some(k) = window.getch() {
             if k == Input::Character('q') {
