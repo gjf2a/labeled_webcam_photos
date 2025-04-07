@@ -84,44 +84,6 @@ impl Menu {
 
 const ENCODINGS: [char; 10] = [' ', '.', ':', ';', '!', '?', '+', '*', '@', '#'];
 
-pub fn encode_in_terminal(header: &str, img: &GrayImage, terminal: &Window) {
-    show_in_terminal(header, &resize_to_terminal(header, img, terminal), terminal);
-}
-
-pub fn header_height(header: &str) -> usize {
-    header.chars().filter(|c| *c == '\n').count()
-}
-
-pub fn resize_to_terminal(header: &str, img: &GrayImage, terminal: &Window) -> GrayImage {
-    let (height, width) = terminal.get_max_yx();
-    let (scaled_width, scaled_height) = target_terminal_width_height(
-        img.width(),
-        img.height(),
-        width,
-        height - header_height(header) as i32,
-    );
-    resize(img, scaled_width, scaled_height, FilterType::Nearest)
-}
-
-pub fn show_in_terminal(header: &str, terminal_sized: &GrayImage, terminal: &Window) {
-    show_header(header, terminal);
-    let header_height = header_height(header);
-    for (row, row_pixels) in terminal_sized.rows().enumerate() {
-        for (col, pixel) in row_pixels.enumerate() {
-            let c = gray2char(pixel.0[0]);
-            terminal.mvaddch((row + header_height) as i32, col as i32, c);
-        }
-    }
-    terminal.refresh();
-}
-
-pub fn show_header(header: &str, terminal: &Window) {
-    terminal.clear();
-    for (row, line) in header.lines().enumerate() {
-        terminal.mvaddstr(row as i32, 0, line);
-    }
-}
-
 fn target_terminal_width_height(
     img_width: u32,
     img_height: u32,
