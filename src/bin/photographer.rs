@@ -8,7 +8,23 @@ use std::time::Instant;
 use labeled_webcam_photos::LabeledPhotoGallery;
 
 fn main() -> anyhow::Result<()> {
-    let photos = LabeledPhotoGallery::with_labels(std::env::args().skip(1));
+    let args = std::env::args().skip(1).collect::<Vec<_>>();
+    if args.len() < 3 {
+        println!("Usage: photographer project_name label_1 label_2 ...");
+        return Ok(());
+    }
+
+    let project = args[0].as_str();
+    let mut photos = LabeledPhotoGallery::with_labels(args[1..].iter().cloned());
+    photos.create_directories(project)?;
+    curses_loop(&mut photos)?;
+
+    
+
+    Ok(())
+}
+
+fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
     let mut menu = photos.make_menu();
 
     let mut camera = Camera::new(
@@ -40,6 +56,8 @@ fn main() -> anyhow::Result<()> {
                 menu.up();
             } else if k == Input::KeyDown {
                 menu.down();
+            } else if k == Input::Character('p') {
+                photos.record_photo(menu.current_choice(), &img);
             }
         }
     }
