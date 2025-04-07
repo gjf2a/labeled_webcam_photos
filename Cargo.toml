@@ -1,0 +1,11 @@
+[package]
+name = "labeled_webcam_photos"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+nokhwa = { version = "0.10.7", features = ["input-native"] }
+image = "0.25.5"
+anyhow = "1"
+pancurses = "0.17"
+imageproc = "0.25.0"
