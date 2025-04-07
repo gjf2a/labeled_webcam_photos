@@ -61,7 +61,7 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
                 menu.up();
             } else if k == Input::KeyDown {
                 menu.down();
-            } else if k == Input::Character('p') {
+            } else if k == Input::Character('p') || k == Input::Character('\n') {
                 photos.record_photo(menu.current_choice(), &img);
                 taken = true;
                 num_taken += 1;
