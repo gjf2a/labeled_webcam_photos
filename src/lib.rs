@@ -27,7 +27,7 @@ impl LabeledPhotoGallery {
             std::fs::create_dir(project_dir)?;
         }
     
-        for label in self.all_labels() {
+        for label in self.all_labels().iter() {
             let label_path = project_dir.join(label);
             if label_path.exists() {
                 if !label_path.is_dir() {
@@ -61,12 +61,14 @@ impl LabeledPhotoGallery {
         self.label2photos.get_mut(label).unwrap().push(img.clone());
     }
 
-    pub fn all_labels(&self) -> impl Iterator<Item=&String> {
-        self.label2photos.keys()
+    pub fn all_labels(&self) -> Vec<String> {
+        let mut labels = self.label2photos.keys().cloned().collect::<Vec<_>>();
+        labels.sort();
+        labels
     }
 
     pub fn make_menu(&self) -> Menu {
-        Menu::from_choices(self.all_labels().cloned())
+        Menu::from_choices(self.all_labels())
     }
 }
 
@@ -76,9 +78,9 @@ pub struct Menu {
 }
 
 impl Menu {
-    pub fn from_choices<I: Iterator<Item=String>>(choices: I) -> Self {
+    pub fn from_choices(choices: Vec<String>) -> Self {
         Self {
-            choices: choices.collect(),
+            choices,
             choice: 0
         }
     }
