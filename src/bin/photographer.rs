@@ -1,5 +1,5 @@
 use nokhwa::{
-    pixel_format::LumaFormat,
+    pixel_format::{LumaFormat, RgbFormat},
     utils::{CameraIndex, RequestedFormat, RequestedFormatType},
     Camera,
 };
@@ -62,6 +62,7 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
             } else if k == Input::KeyDown {
                 menu.down();
             } else if k == Input::Character('p') || k == Input::Character('\n') {
+                let img = frame.decode_image::<RgbFormat>()?;
                 photos.record_photo(menu.current_choice(), &img);
                 taken = true;
                 num_taken += 1;
