@@ -38,7 +38,7 @@ impl LabeledPhotoGallery {
     }
 
     pub fn label_for(&self, img: &RgbImage) -> String {
-        let img = resize(img, SCALED_WIDTH, SCALED_HEIGHT, FilterType::Nearest);
+        //let img = resize(img, SCALED_WIDTH, SCALED_HEIGHT, FilterType::Nearest);
         let mut distances = vec![];
         for (label, photos) in self.label2photos.iter() {
             for photo in photos.iter() {
@@ -97,8 +97,9 @@ impl LabeledPhotoGallery {
 
     pub fn record_photo(&mut self, label: &str, img: &RgbImage) {
         assert!(self.label2photos.contains_key(label));
-        let scaled = resize(img, SCALED_WIDTH, SCALED_HEIGHT, FilterType::Nearest);
-        self.label2photos.get_mut(label).unwrap().push(scaled);
+        //let scaled = resize(img, SCALED_WIDTH, SCALED_HEIGHT, FilterType::Nearest);
+        //self.label2photos.get_mut(label).unwrap().push(scaled);
+        self.label2photos.get_mut(label).unwrap().push(img.clone());
     }
 
     pub fn all_labels(&self) -> Vec<String> {
