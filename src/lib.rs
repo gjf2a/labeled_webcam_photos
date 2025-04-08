@@ -7,6 +7,8 @@ use pancurses::A_REVERSE;
 use anyhow::anyhow;
 
 const K: usize = 5;
+const SCALED_WIDTH: u32 = 160;
+const SCALED_HEIGHT: u32 = 120;
 
 #[derive(Default)]
 pub struct LabeledPhotoGallery {
@@ -36,10 +38,11 @@ impl LabeledPhotoGallery {
     }
 
     pub fn label_for(&self, img: &RgbImage) -> String {
+        let img = resize(img, SCALED_WIDTH, SCALED_HEIGHT, FilterType::Nearest);
         let mut distances = vec![];
         for (label, photos) in self.label2photos.iter() {
             for photo in photos.iter() {
-                let dist = euclidean_distance(img, photo);
+                let dist = euclidean_distance(&img, photo);
                 distances.push((dist, label.clone()));
             }
         }
@@ -94,7 +97,8 @@ impl LabeledPhotoGallery {
 
     pub fn record_photo(&mut self, label: &str, img: &RgbImage) {
         assert!(self.label2photos.contains_key(label));
-        self.label2photos.get_mut(label).unwrap().push(img.clone());
+        let scaled = resize(img, SCALED_WIDTH, SCALED_HEIGHT, FilterType::Nearest);
+        self.label2photos.get_mut(label).unwrap().push(scaled);
     }
 
     pub fn all_labels(&self) -> Vec<String> {

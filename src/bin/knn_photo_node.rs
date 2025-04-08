@@ -13,7 +13,7 @@ const PERIOD: u64 = 100;
 
 fn main() {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
-    if args.len() != 3 {
+    if args.len() != 2 {
         println!("Usage: knn_photo_node robot_name project_name");
         return;
     }
