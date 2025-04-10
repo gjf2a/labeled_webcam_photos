@@ -44,7 +44,7 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
         let fps = frames as f64 / start.elapsed().as_secs_f64();
         let (wrows, wcols) = window.get_max_yx();
         let header = format!(
-            "Type `q` to save images and exit\nterminal rows: {wrows} cols: {wcols}\n{fps:.2} fps; {num_taken} pictures taken\n"
+            "Type `q` to exit\nterminal rows: {wrows} cols: {wcols}\n{fps:.2} fps; {num_taken} pictures taken\n"
         );
         let frame = camera.frame()?;
         let img = frame.decode_image::<LumaFormat>()?;
