@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, fs, path::{Path, PathBuf}};
 
 use anyhow::anyhow;
 use hash_histogram::mode;
@@ -10,17 +10,17 @@ use pancurses::A_REVERSE;
 use pancurses::Window;
 
 const K: usize = 5;
-const SCALED_WIDTH: u32 = 160;
-const SCALED_HEIGHT: u32 = 120;
 
 #[derive(Default)]
 pub struct LabeledPhotoGallery {
+    project_name: String,
     label2photos: HashMap<String, Vec<RgbImage>>,
 }
 
 impl LabeledPhotoGallery {
     pub fn from_disk(project_name: &str) -> anyhow::Result<Self> {
         let mut result = Self {
+            project_name: project_name.to_string(),
             label2photos: HashMap::default(),
         };
         let project_dir = Path::new(project_name);
@@ -43,7 +43,6 @@ impl LabeledPhotoGallery {
     }
 
     pub fn label_for(&self, img: &RgbImage) -> String {
-        //let img = resize(img, SCALED_WIDTH, SCALED_HEIGHT, FilterType::Nearest);
         let mut distances = vec![];
         for (label, photos) in self.label2photos.iter() {
             for photo in photos.iter() {
@@ -55,18 +54,21 @@ impl LabeledPhotoGallery {
         mode(distances[..K].iter().map(|(_, k)| k)).unwrap()
     }
 
-    pub fn with_labels<I: Iterator<Item = String>>(labels: I) -> Self {
-        Self {
+    pub fn with_labels<I: Iterator<Item = String>>(project_name: &str, labels: I) -> anyhow::Result<Self> {
+        let result = Self {
+            project_name: project_name.to_string(),
             label2photos: labels.map(|s| (s, vec![])).collect(),
-        }
+        };
+        result.create_directories()?;
+        Ok(result)
     }
 
-    pub fn create_directories(&self, project: &str) -> anyhow::Result<()> {
-        let project_dir = Path::new(project);
+    fn create_directories(&self) -> anyhow::Result<()> {
+        let project_dir = Path::new(self.project_name.as_str());
         if project_dir.exists() {
             if !project_dir.is_dir() {
                 return Err(anyhow!(
-                    "'{project} already exists as a file, not a directory."
+                    "'{} already exists as a file, not a directory.", self.project_name
                 ));
             }
         } else {
@@ -88,27 +90,28 @@ impl LabeledPhotoGallery {
         Ok(())
     }
 
-    pub fn save_images(&self, project: &str) -> anyhow::Result<()> {
-        self.create_directories(project)?;
-        let project_dir = Path::new(project);
-        for (label, photos) in self.label2photos.iter() {
-            let label_dir = project_dir.join(label);
-            assert!(label_dir.is_dir());
-            let file_count = fs::read_dir(label_dir.as_path())?.count();
-            for (i, img) in photos.iter().enumerate() {
-                let filename = format!("photo_{}.png", file_count + i + 1);
-                let file_path = label_dir.join(filename);
-                img.save(file_path)?;
-            }
+    fn label_dir_path(&self, label: &str) -> anyhow::Result<PathBuf> {
+        let project_dir = Path::new(self.project_name.as_str());
+        let label_dir = project_dir.join(label);
+        if label_dir.is_dir() {
+            Ok(label_dir)
+        } else {
+            Err(anyhow!("{label} does not have a directory defined"))
         }
-        Ok(())
     }
 
-    pub fn record_photo(&mut self, label: &str, img: &RgbImage) {
-        assert!(self.label2photos.contains_key(label));
-        //let scaled = resize(img, SCALED_WIDTH, SCALED_HEIGHT, FilterType::Nearest);
-        //self.label2photos.get_mut(label).unwrap().push(scaled);
-        self.label2photos.get_mut(label).unwrap().push(img.clone());
+    pub fn record_photo(&mut self, label: &str, img: &RgbImage) -> anyhow::Result<()> {
+        if self.label2photos.contains_key(label) {
+            self.label2photos.get_mut(label).unwrap().push(img.clone());
+            let label_dir = self.label_dir_path(label)?;
+            let file_count = fs::read_dir(label_dir.as_path())?.count();
+            let filename = format!("photo_{}.png", file_count + 1);
+            let file_path = label_dir.join(filename);
+            img.save(file_path)?;
+            Ok(())
+        } else {
+            Err(anyhow!("{label} is undefined"))
+        }
     }
 
     pub fn all_labels(&self) -> Vec<String> {

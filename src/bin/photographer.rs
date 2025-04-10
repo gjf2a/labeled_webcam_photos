@@ -15,11 +15,8 @@ fn main() -> anyhow::Result<()> {
     }
 
     let project = args[0].as_str();
-    let mut photos = LabeledPhotoGallery::with_labels(args[1..].iter().cloned());
-    photos.create_directories(project)?;
+    let mut photos = LabeledPhotoGallery::with_labels(project, args[1..].iter().cloned())?;
     curses_loop(&mut photos)?;
-    photos.save_images(project)?;
-
     Ok(())
 }
 
