@@ -60,7 +60,7 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
                 menu.down();
             } else if k == Input::Character('p') || k == Input::Character('\n') {
                 let img = frame.decode_image::<RgbFormat>()?;
-                photos.record_photo(menu.current_choice(), &img);
+                photos.record_photo(menu.current_choice(), &img)?;
                 taken = true;
                 num_taken += 1;
             }
