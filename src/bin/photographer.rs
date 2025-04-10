@@ -1,12 +1,11 @@
-use crossbeam::atomic::AtomicCell;
-use labeled_webcam_photos::LabeledPhotoGallery;
 use nokhwa::{
-    Camera,
     pixel_format::{LumaFormat, RgbFormat},
     utils::{CameraIndex, RequestedFormat, RequestedFormatType},
+    Camera,
 };
-use pancurses::{Input, endwin, initscr, noecho};
-use std::{sync::Arc, time::Instant};
+use pancurses::{endwin, initscr, noecho, Input};
+use std::time::Instant;
+use labeled_webcam_photos::LabeledPhotoGallery;
 
 fn main() -> anyhow::Result<()> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
@@ -41,20 +40,13 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
     let mut taken = false;
     let mut num_taken = 0;
 
-    let running = Arc::new(AtomicCell::new(true));
-    {
-        let running = running.clone();
-        ctrlc::set_handler(move || running.store(false))?;
-    }
     let start = Instant::now();
     let mut frames = 0;
-    while running.load() {
+    loop {
         frames += 1;
         let fps = frames as f64 / start.elapsed().as_secs_f64();
         let (wrows, wcols) = window.get_max_yx();
-        let header = format!(
-            "terminal rows: {wrows} cols: {wcols}\n{fps:.2} fps; {num_taken} pictures taken\n"
-        );
+        let header = format!("Type `q` to save images and exit\nterminal rows: {wrows} cols: {wcols}\n{fps:.2} fps; {num_taken} pictures taken\n");
         let frame = camera.frame()?;
         let img = frame.decode_image::<LumaFormat>()?;
         menu.show_in_terminal(&window, header.as_str(), &img, taken);
@@ -64,7 +56,7 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
 
         if let Some(k) = window.getch() {
             if k == Input::Character('q') {
-                running.store(false);
+                break;
             } else if k == Input::KeyUp {
                 menu.up();
             } else if k == Input::KeyDown {
