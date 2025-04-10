@@ -1,13 +1,13 @@
-use std::sync::Arc;
 use nokhwa::{
+    Camera,
     pixel_format::{LumaFormat, RgbFormat},
     utils::{CameraIndex, RequestedFormat, RequestedFormatType},
-    Camera,
 };
+use std::sync::Arc;
 
-use labeled_webcam_photos::LabeledPhotoGallery;
-use r2r::{std_msgs::msg::String as Ros2String, Context, Node, Publisher, QosProfile};
 use crossbeam::atomic::AtomicCell;
+use labeled_webcam_photos::LabeledPhotoGallery;
+use r2r::{Context, Node, Publisher, QosProfile, std_msgs::msg::String as Ros2String};
 
 const PERIOD: u64 = 100;
 
@@ -32,13 +32,13 @@ fn runner(robot_name: &str, gallery: LabeledPhotoGallery) -> anyhow::Result<()> 
     let context = Context::create()?;
     let node_name = format!("{robot_name}_image_labeler");
     let mut node = Node::create(context, node_name.as_str(), "")?;
-    let publisher = node.create_publisher::<Ros2String>(label_topic.as_str(), QosProfile::sensor_data())?;
+    let publisher =
+        node.create_publisher::<Ros2String>(label_topic.as_str(), QosProfile::sensor_data())?;
     println!("Publishing image label on topic {label_topic}.");
 
     let running = Arc::new(AtomicCell::new(true));
     let r = running.clone();
     ctrlc::set_handler(move || r.store(false))?;
-
 
     smol::block_on(async {
         smol::spawn(image_handler(gallery, publisher)).detach();
@@ -53,14 +53,17 @@ async fn image_handler(gallery: LabeledPhotoGallery, publisher: Publisher<Ros2St
     let mut camera = Camera::new(
         CameraIndex::Index(0),
         RequestedFormat::new::<LumaFormat>(RequestedFormatType::AbsoluteHighestFrameRate),
-    ).unwrap();
+    )
+    .unwrap();
 
     camera.open_stream().unwrap();
 
     loop {
         let frame = camera.frame().unwrap();
         let img = frame.decode_image::<RgbFormat>().unwrap();
-        let msg = Ros2String { data: gallery.label_for(&img)};
+        let msg = Ros2String {
+            data: gallery.label_for(&img),
+        };
         if let Err(e) = publisher.publish(&msg) {
             eprintln!("Error publishing {msg:?}: {e}");
         }

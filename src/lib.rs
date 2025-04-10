@@ -1,10 +1,13 @@
-use std::{collections::HashMap, path::Path, fs};
+use std::{collections::HashMap, fs, path::Path};
 
-use hash_histogram::mode;
-use image::{imageops::{resize, FilterType}, GrayImage, RgbImage, Pixel};
-use pancurses::Window;
-use pancurses::A_REVERSE;
 use anyhow::anyhow;
+use hash_histogram::mode;
+use image::{
+    GrayImage, Pixel, RgbImage,
+    imageops::{FilterType, resize},
+};
+use pancurses::A_REVERSE;
+use pancurses::Window;
 
 const K: usize = 5;
 const SCALED_WIDTH: u32 = 160;
@@ -17,7 +20,9 @@ pub struct LabeledPhotoGallery {
 
 impl LabeledPhotoGallery {
     pub fn from_disk(project_name: &str) -> anyhow::Result<Self> {
-        let mut result = Self {label2photos: HashMap::default()};
+        let mut result = Self {
+            label2photos: HashMap::default(),
+        };
         let project_dir = Path::new(project_name);
         if !project_dir.exists() || !project_dir.is_dir() {
             return Err(anyhow!("{project_name} is not a directory"));
@@ -47,10 +52,10 @@ impl LabeledPhotoGallery {
             }
         }
         distances.sort_by(|(d1, _), (d2, _)| d1.partial_cmp(d2).unwrap());
-        mode(distances[..K].iter().map(|(_,k)| k)).unwrap()
+        mode(distances[..K].iter().map(|(_, k)| k)).unwrap()
     }
 
-    pub fn with_labels<I: Iterator<Item=String>>(labels: I) -> Self {
+    pub fn with_labels<I: Iterator<Item = String>>(labels: I) -> Self {
         Self {
             label2photos: labels.map(|s| (s, vec![])).collect(),
         }
@@ -60,17 +65,21 @@ impl LabeledPhotoGallery {
         let project_dir = Path::new(project);
         if project_dir.exists() {
             if !project_dir.is_dir() {
-                return Err(anyhow!("'{project} already exists as a file, not a directory."));
+                return Err(anyhow!(
+                    "'{project} already exists as a file, not a directory."
+                ));
             }
         } else {
             fs::create_dir(project_dir)?;
         }
-    
+
         for label in self.all_labels().iter() {
             let label_path = project_dir.join(label);
             if label_path.exists() {
                 if !label_path.is_dir() {
-                    return Err(anyhow!("{label} already exists as a file, not a directory."));
+                    return Err(anyhow!(
+                        "{label} already exists as a file, not a directory."
+                    ));
                 }
             } else {
                 fs::create_dir(label_path)?;
@@ -113,24 +122,27 @@ impl LabeledPhotoGallery {
     }
 }
 
-
 // From https://www.perplexity.ai/search/use-the-rust-image-crate-to-fi-RelkEa9VQjOTA7TKiF.yCA
 fn euclidean_distance(img1: &RgbImage, img2: &RgbImage) -> f64 {
-    assert_eq!(img1.dimensions(), img2.dimensions(), "Image dimensions must match");
-    
+    assert_eq!(
+        img1.dimensions(),
+        img2.dimensions(),
+        "Image dimensions must match"
+    );
+
     img1.pixels()
         .zip(img2.pixels())
         .map(|(p1, p2)| {
             let channels1 = p1.channels();
             let channels2 = p2.channels();
-            channels1.iter()
+            channels1
+                .iter()
                 .zip(channels2.iter())
                 .map(|(&c1, &c2)| (c1 as f64 - c2 as f64).powi(2))
                 .sum::<f64>()
         })
         .sum()
 }
-
 
 pub struct Menu {
     choices: Vec<String>,
@@ -139,10 +151,7 @@ pub struct Menu {
 
 impl Menu {
     pub fn from_choices(choices: Vec<String>) -> Self {
-        Self {
-            choices,
-            choice: 0
-        }
+        Self { choices, choice: 0 }
     }
 
     pub fn current_choice(&self) -> &str {
@@ -189,7 +198,11 @@ impl Menu {
         for (row, row_pixels) in resized.rows().enumerate() {
             for (col, pixel) in row_pixels.enumerate() {
                 let c = gray2char(pixel.0[0]);
-                terminal.mvaddch((row + header_size + self.choices.len()) as i32, col as i32, c);
+                terminal.mvaddch(
+                    (row + header_size + self.choices.len()) as i32,
+                    col as i32,
+                    c,
+                );
             }
         }
         terminal.attroff(A_REVERSE);
