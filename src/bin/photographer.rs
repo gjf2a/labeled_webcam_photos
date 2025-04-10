@@ -1,11 +1,11 @@
+use labeled_webcam_photos::LabeledPhotoGallery;
 use nokhwa::{
+    Camera,
     pixel_format::{LumaFormat, RgbFormat},
     utils::{CameraIndex, RequestedFormat, RequestedFormatType},
-    Camera,
 };
-use pancurses::{endwin, initscr, noecho, Input};
+use pancurses::{Input, endwin, initscr, noecho};
 use std::time::Instant;
-use labeled_webcam_photos::LabeledPhotoGallery;
 
 fn main() -> anyhow::Result<()> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
@@ -43,7 +43,9 @@ fn curses_loop(photos: &mut LabeledPhotoGallery) -> anyhow::Result<()> {
         frames += 1;
         let fps = frames as f64 / start.elapsed().as_secs_f64();
         let (wrows, wcols) = window.get_max_yx();
-        let header = format!("Type `q` to save images and exit\nterminal rows: {wrows} cols: {wcols}\n{fps:.2} fps; {num_taken} pictures taken\n");
+        let header = format!(
+            "Type `q` to save images and exit\nterminal rows: {wrows} cols: {wcols}\n{fps:.2} fps; {num_taken} pictures taken\n"
+        );
         let frame = camera.frame()?;
         let img = frame.decode_image::<LumaFormat>()?;
         menu.show_in_terminal(&window, header.as_str(), &img, taken);

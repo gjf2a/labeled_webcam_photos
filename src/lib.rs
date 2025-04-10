@@ -65,27 +65,24 @@ impl LabeledPhotoGallery {
 
     fn create_directories(&self) -> anyhow::Result<()> {
         let project_dir = Path::new(self.project_name.as_str());
-        if project_dir.exists() {
-            if !project_dir.is_dir() {
-                return Err(anyhow!(
-                    "'{} already exists as a file, not a directory.", self.project_name
-                ));
-            }
-        } else {
-            fs::create_dir(project_dir)?;
-        }
+        Self::create_dir_if_needed(project_dir)?;
 
         for label in self.all_labels().iter() {
             let label_path = project_dir.join(label);
-            if label_path.exists() {
-                if !label_path.is_dir() {
-                    return Err(anyhow!(
-                        "{label} already exists as a file, not a directory."
-                    ));
-                }
-            } else {
-                fs::create_dir(label_path)?;
+            Self::create_dir_if_needed(label_path.as_path())?;
+        }
+        Ok(())
+    }
+
+    fn create_dir_if_needed(path: &Path) -> anyhow::Result<()> {
+        if path.exists() {
+            if !path.is_dir() {
+                return Err(anyhow!(
+                    "'{}' already exists as a file, not a directory.", path.display()
+                ));
             }
+        } else {
+            fs::create_dir(path)?;
         }
         Ok(())
     }
