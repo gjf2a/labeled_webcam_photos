@@ -7,13 +7,18 @@ use std::{
 use anyhow::anyhow;
 use hash_histogram::mode;
 use image::{
-    GrayImage, Pixel, RgbImage,
-    imageops::{FilterType, resize},
+    GrayImage, Luma, Pixel, RgbImage, imageops::{FilterType, resize},
 };
+use imageproc::edges::canny;
 use pancurses::A_REVERSE;
 use pancurses::Window;
 
 const K: usize = 5;
+
+pub const CANNY_RESIZE_WIDTH: u32 = 160;
+pub const CANNY_RESIZE_HEIGHT: u32 = 120;
+pub const CANNY_LO_THRESHOLD: f32 = 100.0;
+pub const CANNY_HI_THRESHOLD: f32 = 200.0;
 
 #[derive(Default)]
 pub struct LabeledPhotoGallery {
@@ -239,4 +244,29 @@ fn target_terminal_width_height(
 fn gray2char(gray: u8) -> char {
     let gap = 1 + (u8::MAX / ENCODINGS.len() as u8);
     ENCODINGS[(gray / gap) as usize]
+}
+
+pub fn groundline(image: &GrayImage) -> Vec<u32> {
+    let image = resize(image, CANNY_RESIZE_WIDTH, CANNY_RESIZE_HEIGHT, FilterType::Nearest);
+    let edges = canny(&image, CANNY_LO_THRESHOLD, CANNY_HI_THRESHOLD);
+    let mut result = vec![];
+    for x in 0..image.width() {
+        result.push(highest_y_on(&edges, x));
+    }
+    result
+}
+
+fn highest_y_on(image: &GrayImage, x: u32) -> u32 {
+    (0..image.height())
+        .rev()
+        .find(|y| image.get_pixel(x, *y)[0] > 0)
+        .unwrap_or(0)
+}
+
+pub fn groundline_image(groundline: &Vec<u32>, height: u32) -> GrayImage {
+    let mut result = GrayImage::new(groundline.len() as u32, height);
+    for (x, y) in groundline.iter().enumerate() {
+        result.put_pixel(x as u32, *y, Luma([255]));
+    }
+    result
 }
