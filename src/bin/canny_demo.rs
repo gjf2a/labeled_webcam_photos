@@ -40,12 +40,14 @@ fn curses_loop(low_threshold: f32, high_threshold: f32) -> anyhow::Result<()> {
         frames += 1;
         let fps = frames as f64 / start.elapsed().as_secs_f64();
         let (wrows, wcols) = window.get_max_yx();
-        let header = format!(
-            "Type `q` to exit\nterminal rows: {wrows} cols: {wcols}\n{fps:.2} fps;\n"
-        );
+
         let frame = camera.frame()?;
         let image = frame.decode_image::<LumaFormat>()?;
-        let image = resize(&image, wcols as u32, wrows as u32, FilterType::Nearest);
+        let header = format!(
+            "Type `q` to exit\nimage width: {} height: {}\nterminal rows: {wrows} cols: {wcols}\n{fps:.2} fps;\n",
+            image.width(), image.height()    
+        );
+        let image = resize(&image, 160, 120, FilterType::Nearest);
         let edges = canny(&image, low_threshold, high_threshold);
         menu.show_in_terminal(&window, header.as_str(), &edges, false);
         
