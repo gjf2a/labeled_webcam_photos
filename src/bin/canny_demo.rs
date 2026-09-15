@@ -7,6 +7,7 @@ use nokhwa::{
 };
 use pancurses::{Input, endwin, initscr, noecho};
 use std::time::Instant;
+use image::imageops::{FilterType, resize};
 
 fn main() -> anyhow::Result<()> {
     let args = std::env::args().collect::<Vec<_>>();
@@ -44,6 +45,7 @@ fn curses_loop(low_threshold: f32, high_threshold: f32) -> anyhow::Result<()> {
         );
         let frame = camera.frame()?;
         let image = frame.decode_image::<LumaFormat>()?;
+        let image = resize(&image, wcols as u32, wrows as u32, FilterType::Nearest);
         let edges = canny(&image, low_threshold, high_threshold);
         menu.show_in_terminal(&window, header.as_str(), &edges, false);
         
