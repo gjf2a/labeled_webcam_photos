@@ -1,6 +1,6 @@
 use image::imageops::{FilterType, resize};
 use imageproc::edges::canny;
-use labeled_webcam_photos::{CANNY_RESIZE_HEIGHT, CANNY_RESIZE_WIDTH, Menu};
+use labeled_webcam_photos::{CANNY_HI_THRESHOLD, CANNY_LO_THRESHOLD, CANNY_RESIZE_HEIGHT, CANNY_RESIZE_WIDTH, Menu};
 use nokhwa::{
     Camera,
     pixel_format::LumaFormat,
@@ -11,9 +11,11 @@ use std::time::Instant;
 
 fn main() -> anyhow::Result<()> {
     let args = std::env::args().collect::<Vec<_>>();
-    if args.len() < 3 {
-        println!("Usage: canny_demo low_threshold high_threshold");
+    if args.len() == 2 {
+        println!("Usage: canny_demo [low_threshold high_threshold]");
         Ok(())
+    } else if args.len() == 1{
+        curses_loop(CANNY_LO_THRESHOLD, CANNY_HI_THRESHOLD)
     } else {
         curses_loop(args[1].parse().unwrap(), args[2].parse().unwrap())
     }
