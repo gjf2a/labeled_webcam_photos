@@ -1,4 +1,8 @@
-use std::{collections::HashMap, fs, path::{Path, PathBuf}};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use anyhow::anyhow;
 use hash_histogram::mode;
@@ -54,7 +58,10 @@ impl LabeledPhotoGallery {
         mode(distances[..K].iter().map(|(_, k)| k)).unwrap()
     }
 
-    pub fn with_labels<I: Iterator<Item = String>>(project_name: &str, labels: I) -> anyhow::Result<Self> {
+    pub fn with_labels<I: Iterator<Item = String>>(
+        project_name: &str,
+        labels: I,
+    ) -> anyhow::Result<Self> {
         let result = Self {
             project_name: project_name.to_string(),
             label2photos: labels.map(|s| (s, vec![])).collect(),
@@ -78,7 +85,8 @@ impl LabeledPhotoGallery {
         if path.exists() {
             if !path.is_dir() {
                 return Err(anyhow!(
-                    "'{}' already exists as a file, not a directory.", path.display()
+                    "'{}' already exists as a file, not a directory.",
+                    path.display()
                 ));
             }
         } else {

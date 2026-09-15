@@ -1,3 +1,4 @@
+use image::imageops::{FilterType, resize};
 use imageproc::edges::canny;
 use labeled_webcam_photos::Menu;
 use nokhwa::{
@@ -7,7 +8,9 @@ use nokhwa::{
 };
 use pancurses::{Input, endwin, initscr, noecho};
 use std::time::Instant;
-use image::imageops::{FilterType, resize};
+
+const FAST_RESIZE_WIDTH: u32 = 160;
+const FAST_RESIZE_HEIGHT: u32 = 120;
 
 fn main() -> anyhow::Result<()> {
     let args = std::env::args().collect::<Vec<_>>();
@@ -16,7 +19,7 @@ fn main() -> anyhow::Result<()> {
         Ok(())
     } else {
         curses_loop(args[1].parse().unwrap(), args[2].parse().unwrap())
-    }    
+    }
 }
 
 fn curses_loop(low_threshold: f32, high_threshold: f32) -> anyhow::Result<()> {
@@ -45,12 +48,18 @@ fn curses_loop(low_threshold: f32, high_threshold: f32) -> anyhow::Result<()> {
         let image = frame.decode_image::<LumaFormat>()?;
         let header = format!(
             "Type `q` to exit\nimage width: {} height: {}\nterminal rows: {wrows} cols: {wcols}\n{fps:.2} fps;\n",
-            image.width(), image.height()    
+            image.width(),
+            image.height()
         );
-        let image = resize(&image, 160, 120, FilterType::Nearest);
+        let image = resize(
+            &image,
+            FAST_RESIZE_WIDTH,
+            FAST_RESIZE_HEIGHT,
+            FilterType::Nearest,
+        );
         let edges = canny(&image, low_threshold, high_threshold);
         menu.show_in_terminal(&window, header.as_str(), &edges, false);
-        
+
         if let Some(k) = window.getch() {
             if k == Input::Character('q') {
                 break;
@@ -58,7 +67,7 @@ fn curses_loop(low_threshold: f32, high_threshold: f32) -> anyhow::Result<()> {
                 menu.up();
             } else if k == Input::KeyDown {
                 menu.down();
-            } 
+            }
         }
     }
 
