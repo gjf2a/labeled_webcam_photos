@@ -144,6 +144,7 @@ fn euclidean_distance(img1: &RgbImage, img2: &RgbImage) -> f64 {
         .sum()
 }
 
+#[derive(Default)]
 pub struct Menu {
     choices: Vec<String>,
     choice: usize,
