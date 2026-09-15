@@ -1,4 +1,4 @@
-use edge_detection::canny;
+use imageproc::edges::canny;
 use labeled_webcam_photos::Menu;
 use nokhwa::{
     Camera,
@@ -10,15 +10,15 @@ use std::time::Instant;
 
 fn main() -> anyhow::Result<()> {
     let args = std::env::args().collect::<Vec<_>>();
-    if args.len() < 4 {
-        println!("Usage: canny_demo sigma strong_threshold weak_threshold");
+    if args.len() < 3 {
+        println!("Usage: canny_demo low_threshold high_threshold");
         Ok(())
     } else {
-        curses_loop(args[1].parse().unwrap(), args[2].parse().unwrap(), args[3].parse().unwrap())
+        curses_loop(args[1].parse().unwrap(), args[2].parse().unwrap())
     }    
 }
 
-fn curses_loop(sigma: f32, strong_threshold: f32, weak_threshold: f32) -> anyhow::Result<()> {
+fn curses_loop(low_threshold: f32, high_threshold: f32) -> anyhow::Result<()> {
     let mut menu = Menu::default();
 
     let mut camera = Camera::new(
@@ -44,7 +44,7 @@ fn curses_loop(sigma: f32, strong_threshold: f32, weak_threshold: f32) -> anyhow
         );
         let frame = camera.frame()?;
         let image = frame.decode_image::<LumaFormat>()?;
-        let edges = canny(image, sigma, strong_threshold, weak_threshold).as_image().into_luma8();
+        let edges = canny(&image, low_threshold, high_threshold);
         menu.show_in_terminal(&window, header.as_str(), &edges, false);
         
         if let Some(k) = window.getch() {
