@@ -9,7 +9,7 @@ use nokhwa::{
 use pancurses::{Input, endwin, initscr, noecho};
 use r2r::{Context, Node, Publisher, QosProfile, std_msgs::msg::String as Ros2String};
 use smol::lock::Mutex;
-use std::{sync::Arc, time::Instant};
+use std::sync::Arc;
 
 const PERIOD: u64 = 100;
 
@@ -41,14 +41,10 @@ fn curses_loop(robot_name: &str) -> anyhow::Result<()> {
     window.nodelay(true);
     noecho();
 
-    let start = Instant::now();
-    let mut frames = 0;
     loop {
-        frames += 1;
-        let fps = frames as f64 / start.elapsed().as_secs_f64();
         let (wrows, wcols) = window.get_max_yx();
         let header =
-            format!("Type `q` to exit\nterminal rows: {wrows} cols: {wcols}\n{fps:.2} fps;\n");
+            format!("Type `q` to exit\nterminal rows: {wrows} cols: {wcols}\n");
         if let Some(image) = image.try_lock() {
             if let Some(image) = image.as_ref() {
                 menu.show_in_terminal(&window, header.as_str(), &image, false);
