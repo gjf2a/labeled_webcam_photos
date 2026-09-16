@@ -41,7 +41,7 @@ fn curses_loop() -> anyhow::Result<()> {
             image.height()
         );
         let groundline = groundline(&image);
-        let image = groundline_image(&groundline, image.height());
+        let image = groundline_image(&groundline);
         menu.show_in_terminal(&window, header.as_str(), &image, false);
 
         if let Some(k) = window.getch() {
