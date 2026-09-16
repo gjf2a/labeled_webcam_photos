@@ -7,7 +7,8 @@ use std::{
 use anyhow::anyhow;
 use hash_histogram::mode;
 use image::{
-    GrayImage, Luma, Pixel, RgbImage, imageops::{FilterType, resize},
+    GrayImage, Luma, Pixel, RgbImage,
+    imageops::{FilterType, resize},
 };
 use imageproc::edges::canny;
 use pancurses::A_REVERSE;
@@ -247,7 +248,12 @@ fn gray2char(gray: u8) -> char {
 }
 
 pub fn groundline(image: &GrayImage) -> Vec<u32> {
-    let image = resize(image, CANNY_RESIZE_WIDTH, CANNY_RESIZE_HEIGHT, FilterType::Nearest);
+    let image = resize(
+        image,
+        CANNY_RESIZE_WIDTH,
+        CANNY_RESIZE_HEIGHT,
+        FilterType::Nearest,
+    );
     let edges = canny(&image, CANNY_LO_THRESHOLD, CANNY_HI_THRESHOLD);
     let mut result = vec![];
     for x in 0..image.width() {
