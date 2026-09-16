@@ -27,7 +27,14 @@ fn curses_loop(robot_name: &str) -> anyhow::Result<()> {
     let mut menu = Menu::default();
 
     let image = Arc::new(Mutex::new(None));
-    runner(robot_name, image.clone())?;
+    let thread_image = image.clone();
+    let robot_name = robot_name.to_string();
+    std::thread::spawn(move || {
+        if let Err(e) = runner(&robot_name, thread_image) {
+            eprintln!("Couldn't start groundline thread: {e}");
+        }
+    });
+    
 
     let window = initscr();
     window.keypad(true);
@@ -70,7 +77,7 @@ fn runner(robot_name: &str, image: Arc<Mutex<Option<GrayImage>>>) -> anyhow::Res
     let mut node = Node::create(context, node_name.as_str(), "")?;
     let publisher =
         node.create_publisher::<Ros2String>(label_topic.as_str(), QosProfile::sensor_data())?;
-    println!("Publishing image label on topic {label_topic}.");
+    println!("Publishing groundline on topic {label_topic}.");
 
     let running = Arc::new(AtomicCell::new(true));
     let r = running.clone();
