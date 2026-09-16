@@ -265,8 +265,10 @@ fn highest_y_on(image: &GrayImage, x: u32) -> u32 {
 
 pub fn groundline_image(groundline: &Vec<u32>) -> GrayImage {
     let mut result = GrayImage::new(CANNY_RESIZE_WIDTH, CANNY_RESIZE_HEIGHT);
-    for (x, y) in groundline.iter().enumerate() {
-        result.put_pixel(x as u32, *y, Luma([255]));
+    for (x, height) in groundline.iter().enumerate() {
+        for y in 0..=*height {
+            result.put_pixel(x as u32, y, Luma([255]));
+        }
     }
     result
 }
