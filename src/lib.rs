@@ -257,7 +257,7 @@ pub fn groundline(image: &GrayImage) -> Vec<u32> {
     let edges = canny(&image, CANNY_LO_THRESHOLD, CANNY_HI_THRESHOLD);
     let mut result = vec![];
     for x in 0..image.width() {
-        result.push(highest_y_on(&edges, x));
+        result.push(CANNY_RESIZE_HEIGHT - highest_y_on(&edges, x));
     }
     result
 }
@@ -272,8 +272,8 @@ fn highest_y_on(image: &GrayImage, x: u32) -> u32 {
 pub fn groundline_image(groundline: &Vec<u32>) -> GrayImage {
     let mut result = GrayImage::new(CANNY_RESIZE_WIDTH, CANNY_RESIZE_HEIGHT);
     for (x, height) in groundline.iter().enumerate() {
-        for y in *height..CANNY_RESIZE_HEIGHT {
-            result.put_pixel(x as u32, y, Luma([255]));
+        for y in 0..*height {
+            result.put_pixel(x as u32, CANNY_RESIZE_HEIGHT - y, Luma([255]));
         }
     }
     result
