@@ -173,16 +173,24 @@ impl Menu {
         self.choices[self.choice].as_str()
     }
 
+    pub fn has_multiple_choices(&self) -> bool {
+        self.choices.len() > 1
+    }
+
     pub fn up(&mut self) {
-        if self.choice == 0 {
-            self.choice = self.choices.len() - 1;
-        } else {
-            self.choice -= 1;
+        if self.has_multiple_choices() {
+            if self.choice == 0 {
+                self.choice = self.choices.len() - 1;
+            } else {
+                self.choice -= 1;
+            }
         }
     }
 
     pub fn down(&mut self) {
-        self.choice = (self.choice + 1) % self.choices.len();
+        if self.has_multiple_choices() {
+            self.choice = (self.choice + 1) % self.choices.len();
+        }
     }
 
     pub fn show_in_terminal(&self, terminal: &Window, header: &str, img: &GrayImage, taken: bool) {
